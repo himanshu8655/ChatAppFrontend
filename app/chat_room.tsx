@@ -10,12 +10,22 @@ import FilePreview from '@/components/file_preview';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { openAIResponse } from '@/api/userService';
 import { Animated } from 'react-native';
+import { router } from 'expo-router';
+import { StackActions } from '@react-navigation/native';
+
+enum MessageStatus {
+  SENT = 'sent',
+  DELIVERED = 'delivered',
+  READ = 'read',
+}
 
 interface Message {
-  from: string,
-  message: string,
-  isFile: boolean,
-  room: string
+  id?: string;
+  from: string;
+  message: string;
+  isFile: boolean;
+  group: string;
+  msgStatus: MessageStatus;
 }
 
 interface ChatRouteParams {
@@ -55,7 +65,7 @@ const ChatRoom = () => {
       newSocket.on('connect', () => {
         console.log('Connected to server');
       });
-      newSocket.emit('join_room', room_id);
+      newSocket.emit('join_group', room_id);
 
       newSocket.on('message', (data: Message) => {
         if (data.from != uid)
@@ -67,6 +77,18 @@ const ChatRoom = () => {
           setUserIdTyping(`${userId} is typing ...`)
           startTimer();
         }
+      })
+
+      newSocket.on('messageStatusUpdate', (update) => {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === update.id ? { ...msg, msgStatus: update.msgStatus } : msg
+          )
+        );
+      });
+      newSocket.on('unauthorized_access', (data) => {
+        router.dismissAll();
+        router.navigate('./unauthorized_access');
       })
 
       return () => {
@@ -86,16 +108,16 @@ const ChatRoom = () => {
       useNativeDriver: true,
     }).start();
 
- const id = setTimeout(() => {
-    Animated.timing(typingOpacity, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => setUserIdTyping(''));
-    setTimerId(null);
-  }, 2000);
+    const id = setTimeout(() => {
+      Animated.timing(typingOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => setUserIdTyping(''));
+      setTimerId(null);
+    }, 2000);
 
-  setTimerId(id);
+    setTimerId(id);
   };
 
   const stopTimer = () => {
@@ -111,8 +133,9 @@ const ChatRoom = () => {
     const userMessage: Message = {
       from: userId,
       message: message,
-      room: room_id,
-      isFile: false
+      group: room_id,
+      isFile: false,
+      msgStatus: MessageStatus.SENT,
     };
 
     setMessages((prevMessages) => [...prevMessages, userMessage]);
@@ -120,10 +143,9 @@ const ChatRoom = () => {
     let aiResponse = "";
 
     const aiMessageIndex = messages.length;
-
     setMessages((prevMessages) => [
       ...prevMessages,
-      { from: "AI", message: "", room: room_id, isFile: false }
+      {from: "AI", message: "", group: room_id, isFile: false, msgStatus: MessageStatus.READ }
     ]);
 
     openAIResponse(message, (chunk) => {
@@ -135,8 +157,9 @@ const ChatRoom = () => {
         updatedMessages[aiMessageIndex + 1] = {
           from: "AI",
           message: aiResponse,
-          room: room_id,
-          isFile: false
+          group: room_id,
+          isFile: false,
+          msgStatus: MessageStatus.READ
         };
 
         return updatedMessages;
@@ -155,8 +178,9 @@ const ChatRoom = () => {
       const msg: Message = {
         from: userId,
         message: message,
-        room: room_id,
-        isFile: false
+        group: room_id,
+        isFile: false,
+        msgStatus: MessageStatus.SENT
       };
       socket.emit('message', msg);
       setMessages((prevMessages) => [...prevMessages, msg]);
@@ -166,7 +190,7 @@ const ChatRoom = () => {
 
   const onTyping = (text: string) => {
     setMessage(text)
-    socket?.emit('typing', ({ userId: userId, roomId: room_id }));
+    socket?.emit('typing', ({ userId: userId, groupId: room_id }));
   }
 
   const handleFileUpload = async () => {
@@ -197,8 +221,10 @@ const ChatRoom = () => {
         const msg: Message = {
           from: userId,
           message: response.data.fileUrl,
-          room: room_id,
-          isFile: true
+          group: room_id,
+          isFile: true,
+          msgStatus: MessageStatus.READ,
+
 
         };
         socket?.emit('message', msg);
@@ -216,39 +242,51 @@ const ChatRoom = () => {
 
     return (
       <View style={[styles.messageContainer, isSentByMe ? styles.myMessage : styles.otherMessage]}>
+        <View style={styles.messageHeader}>
+          <Text style={styles.fromText}>{isSentByMe ? "You:" : `~${item.from}`}</Text>
+
+        </View>
 
         {item.isFile ? (
-          <FilePreview
-            from={item.from}
-            message={item.message}
-            fileUri={item.message}
-          />
+          <FilePreview from={item.from} message={item.message} fileUri={item.message} />
         ) : (
-          <Text style={styles.messageText}>
-            {isSentByMe ? `${item.message}` : `${item.message}`}
-          </Text>
+          <Text style={styles.messageText}>{item.message}</Text>
         )}
+        <View style={styles.statusContainer}>
+          <Icon
+            name={
+              item.msgStatus === MessageStatus.READ
+                ? "done-all"
+                : item.msgStatus === MessageStatus.DELIVERED
+                  ? "done"
+                  : "schedule"
+            }
+            size={14}
+            color="#FFF"
+          />
+        </View>
       </View>
     );
   };
 
+
   return (
     <View style={{ flex: 1, padding: 10 }}>
       <Text>Chatting with {userId}</Text>
-  
+
       <FlatList
         data={messages}
         keyExtractor={(item, index) => index.toString()}
         renderItem={renderMessage}
       />
-  
+
       <View>
         {userIdTyping !== '' && (
           <Animated.View style={[styles.typingIndicatorContainer, { opacity: typingOpacity }]}>
             <Text style={styles.typingIndicatorText}>{userIdTyping}</Text>
           </Animated.View>
         )}
-  
+
         <View style={styles.inputContainer}>
           <TextInput
             placeholder="Type your message..."
@@ -264,7 +302,7 @@ const ChatRoom = () => {
       </View>
     </View>
   );
-  
+
 };
 
 const styles = {
@@ -273,6 +311,7 @@ const styles = {
     maxWidth: '80%',
     borderRadius: 10,
     padding: 10,
+    minWidth: 100,
   },
   myMessage: {
     backgroundColor: '#0096c7',
@@ -285,6 +324,27 @@ const styles = {
   messageText: {
     color: '#FFF',
     fontSize: 16,
+  },
+  messageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  fromText: {
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+
+  },
+  statusText: {
+    color: '#FFF',
+    fontSize: 12,
+    marginRight: 5,
   },
   inputContainer: {
     flexDirection: 'row',

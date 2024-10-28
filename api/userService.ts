@@ -1,6 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import OpenAI from 'openai';
+import { logout } from './auth';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -13,8 +14,11 @@ export const fetchUsers = async () => {
     const response = await axios.get(`${API_URL}/users`, { headers });
     return response.data;
   } catch (error) {
-    console.error('Error fetching users:', error);
-    throw error;
+      if(error.status == 403){
+        console.error('Error fetching users:', error);
+        logout();
+      }
+      throw error;
   }
 };
 
@@ -27,7 +31,10 @@ export const fetchGroups = async () => {
       const response = await axios.get(`${API_URL}/groups`, { headers });
       return response.data;
     } catch (error) {
-      console.error('Error fetching groups:', error);
+      if(error.status == 403){
+        console.error('Error fetching groups:', error);
+        logout();
+      }
       throw error;
     }
   };
@@ -57,6 +64,5 @@ export const fetchGroups = async () => {
     }
   } catch (error) {
     console.error("Error with OpenAI API call:", error);
-    onChunk("An error occurred while processing your request.");
   }
 };

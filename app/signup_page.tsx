@@ -4,13 +4,14 @@ import { signup } from '../api/auth';
 import { router } from 'expo-router';
 
 const Signup = () => {
+  const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleSignup = async () => {
     try {
-      await signup(username, password);
+      await signup(username, password, name);
       router.navigate("./login_page");
     } catch (err) {
       setError('Error creating account');
@@ -20,6 +21,13 @@ const Signup = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create Account</Text>
+      <TextInput 
+        placeholder="Name" 
+        style={styles.input} 
+        onChangeText={setName} 
+        value={name} 
+        autoCapitalize="none" 
+      />
       <TextInput 
         placeholder="Username" 
         style={styles.input} 

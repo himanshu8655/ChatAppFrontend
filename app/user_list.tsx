@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { fetchGroups, fetchUsers } from '@/api/userService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getUserID } from '@/api/auth';
+import { getUserID, logout } from '@/api/auth';
 
 
 interface User {
@@ -13,8 +13,8 @@ interface User {
 }
 
 interface Group {
-  groupName: string;
-  members: string[];
+  group_id: string;
+  group_name: string;
 }
 
 const UserList = () => {
@@ -39,8 +39,9 @@ const UserList = () => {
     fetchData();
   }, []);
 
-  const handleUserPress = async(reciepentId: string) => {
+  const handleUserPress = async (reciepentId: string) => {
     let uid = await getUserID();
+    console.log(uid);
     const userId = [reciepentId, uid].sort().join('_');
     console.log(userId)
     router.navigate(`./chat_room?room_id=${userId}`);
@@ -53,10 +54,9 @@ const UserList = () => {
   const handleNewGroupPress = () => {
     router.navigate('./create_group');
   };
-  
-  const grpSelected = (members: string[]) => {
-    members.sort();
-    router.navigate(`./chat_room?room_id=${members.join('_')}`)
+
+  const grpSelected = (room_id: string) => {
+    router.navigate(`./chat_room?room_id=${room_id}`)
   };
 
   if (loading) {
@@ -74,10 +74,18 @@ const UserList = () => {
       <View style={styles.sectionContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.sectionHeader}>Users List</Text>
-          <TouchableOpacity style={styles.aiButton} onPress={handleChatWithAIPress}>
-            <Icon name="smart-toy" size={24} color="white" />
-            <Text style={styles.buttonText}>Chat With AI</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row" }}>
+            <TouchableOpacity style={styles.aiButton} onPress={handleChatWithAIPress}>
+              <Icon name="smart-toy" size={24} color="white" />
+              <Text style={styles.buttonText}>Chat With AI</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={logout}>
+              <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                <Icon name="power-settings-new" size={24} color="red" />
+                <Text style={styles.logoutText}>Logout</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <FlatList
@@ -106,11 +114,11 @@ const UserList = () => {
 
         <FlatList
           data={groups}
-          keyExtractor={(item) => item.groupName}
+          keyExtractor={(item) => item.group_id}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.groupItem} onPress={()=>{grpSelected(item.members)}}>
+            <TouchableOpacity style={styles.groupItem} onPress={() => { grpSelected(item.group_id) }}>
               <Icon name="group" size={24} color="#555" />
-              <Text style={styles.groupName}>{item.groupName}</Text>
+              <Text style={styles.groupName}>{item.group_name}</Text>
               <Icon name="chevron-right" size={24} color="#007BFF" style={styles.arrowIcon} />
             </TouchableOpacity>
           )}
@@ -208,6 +216,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFEBEB',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginLeft: 15,
+  },
+  logoutText: {
+    fontSize: 16,
+    color: 'red',
+    fontWeight: '600',
+    marginLeft: 5,
   },
 });
 

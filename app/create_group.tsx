@@ -29,13 +29,8 @@ const UserList = () => {
         };
         const response = await axios.get(`${API_URL}/users`, { headers });
         const users = response.data;
-
-        const uniqueUsers = users.filter((user: User, index: number, self: User[]) =>
-          index === self.findIndex((u) => u.id === user.id)
-        );
-
-        setUsers(uniqueUsers);
-        const initialCheckedState = uniqueUsers.reduce(
+        setUsers(users);
+        const initialCheckedState = users.reduce(
           (acc, user) => ({ ...acc, [user.id]: false }),
           {}
         );
@@ -96,7 +91,7 @@ const UserList = () => {
       };
       
       const payload = {
-        name: groupName,
+        groupName: groupName,
         userIds: selectedUserIds,
       };
       
