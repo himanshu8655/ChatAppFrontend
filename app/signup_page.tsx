@@ -12,7 +12,7 @@ const Signup = () => {
   const handleSignup = async () => {
     try {
       await signup(username, password, name);
-      router.navigate("./login_page");
+      router.navigate("./user_list");
     } catch (err) {
       setError('Error creating account');
     }

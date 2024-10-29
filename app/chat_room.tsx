@@ -34,7 +34,6 @@ interface ChatRouteParams {
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-
 const ChatRoom = () => {
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -45,7 +44,18 @@ const ChatRoom = () => {
   const [userIdTyping, setUserIdTyping] = useState<String>('');
   const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
   const [typingOpacity] = useState(new Animated.Value(0));
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [dropdownHeight] = useState(new Animated.Value(0));
 
+  const toggleDropdown = () => {
+    setIsDropdownVisible(!isDropdownVisible);
+
+    Animated.timing(dropdownHeight, {
+      toValue: isDropdownVisible ? 0 : 100, // Adjust height based on dropdown items
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
   useEffect(() => {
     if (room_id === "AI") {
       return
@@ -64,7 +74,7 @@ const ChatRoom = () => {
 
       newSocket.on('connect', () => {
         console.log('Connected to server');
-      });
+      }); 
       newSocket.emit('join_group', room_id);
 
       newSocket.on('message', (data: Message) => {
@@ -118,15 +128,6 @@ const ChatRoom = () => {
     }, 2000);
 
     setTimerId(id);
-  };
-
-  const stopTimer = () => {
-    if (timerId) {
-      clearTimeout(timerId);
-      setTimerId(null);
-      setUserIdTyping('')
-
-    }
   };
 
   const handleAIResponse = async () => {
@@ -244,7 +245,13 @@ const ChatRoom = () => {
       <View style={[styles.messageContainer, isSentByMe ? styles.myMessage : styles.otherMessage]}>
         <View style={styles.messageHeader}>
           <Text style={styles.fromText}>{isSentByMe ? "You:" : `~${item.from}`}</Text>
-
+          <TouchableOpacity
+        onPressIn={toggleDropdown}
+        onPressOut={toggleDropdown}
+        style={styles.iconContainer}
+      >
+        <Icon name="keyboard-arrow-down" size={20} color="#fff" />
+      </TouchableOpacity>
         </View>
 
         {item.isFile ? (
@@ -278,6 +285,8 @@ const ChatRoom = () => {
         data={messages}
         keyExtractor={(item, index) => index.toString()}
         renderItem={renderMessage}
+        contentContainerStyle={{ paddingBottom: 20 }} // Adds padding at the bottom to avoid overlap with input
+
       />
 
       <View>

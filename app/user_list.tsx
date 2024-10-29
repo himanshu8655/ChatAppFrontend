@@ -69,14 +69,14 @@ const UserList = () => {
 
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {/* Section for Users */}
       <View style={styles.sectionContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.sectionHeader}>Users List</Text>
           <View style={{ flexDirection: "row" }}>
             <TouchableOpacity style={styles.aiButton} onPress={handleChatWithAIPress}>
-              <Icon name="smart-toy" size={24} color="white" />
+              <Icon name="smart-toy" size={22} color="white" />
               <Text style={styles.buttonText}>Chat With AI</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={logout}>
@@ -87,7 +87,7 @@ const UserList = () => {
             </TouchableOpacity>
           </View>
         </View>
-
+        {users.length == 0?<Text>No User Found</Text>:<></>}
         <FlatList
           data={users}
           keyExtractor={(item) => item.id}
@@ -99,6 +99,7 @@ const UserList = () => {
             </TouchableOpacity>
           )}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
+
         />
       </View>
 
@@ -125,7 +126,7 @@ const UserList = () => {
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -147,6 +148,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
+    marginRight: 10
   },
   userItem: {
     flexDirection: 'row',
@@ -208,7 +210,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     marginLeft: 10,
   },
