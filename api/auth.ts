@@ -1,7 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import { RSA } from 'react-native-rsa-native';
+import RSAKey from "react-native-rsa";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -18,11 +18,13 @@ export const signup = async (
   password: string,
   name: string
 ) => {
-  generateKey();
+  console.log("hii");
+  const publickey = "key"
   const response = await axios.post(`${API_URL}/signup`, {
     username,
     password,
-    name
+    name,
+    publickey
   });
   await AsyncStorage.setItem("token", response.data.token);
   await AsyncStorage.setItem("userId", response.data.userId.toString());
@@ -44,9 +46,3 @@ export const logout = async () => {
   router.navigate("/login_page");
 };
 
-
-export const generateKey = async () => {
-  const keys = await RSA.generate()
-  console.log('private:', keys.private) // the private key
-  console.log('public:', keys.public) // the public key
-}

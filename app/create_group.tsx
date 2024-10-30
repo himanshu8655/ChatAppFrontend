@@ -102,8 +102,7 @@ const UserList = () => {
       setSelectAll(false); 
 
       alert("Group created successfully!");
-      console.log("Group created:", response.data);
-      
+      router.navigate('./user_list')
     } catch (error) {
       console.error('Error creating group:', error);
       alert("An error occurred while creating the group. Please try again.");

@@ -1,14 +1,14 @@
 import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import 'react-native-gesture-handler';
 import Login from '../login_page';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function HomeScreen() {
   return (
-    <Login/>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Login/>
+    </GestureHandlerRootView>
+    
   );
 }
 

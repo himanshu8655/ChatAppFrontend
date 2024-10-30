@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { fetchGroups, fetchUsers } from '@/api/userService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getUserID, logout } from '@/api/auth';
+import { useIsFocused } from '@react-navigation/native';
 
 
 interface User {
@@ -21,23 +22,40 @@ const UserList = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUsersData = async () => {
       try {
+        console.log("Fetching users...");
         const usersData = await fetchUsers();
         setUsers(usersData);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+
+    fetchUsersData();
+  }, []);
+
+  useEffect(() => {
+    const fetchGroupsData = async () => {
+      try {
+        setLoading(true); // Start loading
+        console.log("Fetching groups...");
         const groupsData = await fetchGroups();
         setGroups(groupsData);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching groups:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    if (isFocused) {
+      fetchGroupsData();
+    }
+  }, [isFocused]);
 
   const handleUserPress = async (reciepentId: string) => {
     let uid = await getUserID();
@@ -87,20 +105,21 @@ const UserList = () => {
             </TouchableOpacity>
           </View>
         </View>
-        {users.length == 0?<Text>No User Found</Text>:<></>}
-        <FlatList
-          data={users}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleUserPress(item.id)} style={styles.userItem}>
-              <Icon name="person" size={24} color="#555" />
-              <Text style={styles.username}>{item.username}</Text>
-              <Icon name="chevron-right" size={24} color="#007BFF" style={styles.arrowIcon} />
-            </TouchableOpacity>
-          )}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+        {users.length == 0 ? <Text>No User Found</Text> :<></>}
+          <FlatList
+            data={users}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => handleUserPress(item.id)} style={styles.userItem}>
+                <Icon name="person" size={24} color="#555" />
+                <Text style={styles.username}>{item.username}</Text>
+                <Icon name="chevron-right" size={24} color="#007BFF" style={styles.arrowIcon} />
+              </TouchableOpacity>
+            )}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
 
-        />
+          />
+        
       </View>
 
       {/* Section for Groups */}

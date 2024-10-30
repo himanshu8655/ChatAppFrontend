@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, Button, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, TouchableOpacity } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import { getToken, getUserID } from '@/api/auth';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import FilePreview from '@/components/file_preview';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { openAIResponse } from '@/api/userService';
 import { Animated } from 'react-native';
 import { router } from 'expo-router';
-import { StackActions } from '@react-navigation/native';
+import MessagePreview from '@/components/MessagePreview';
+import { FlashList } from '@shopify/flash-list';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 enum MessageStatus {
   SENT = 'sent',
@@ -183,6 +184,7 @@ const ChatRoom = () => {
         isFile: false,
         msgStatus: MessageStatus.SENT
       };
+      console.log(msg)
       socket.emit('message', msg);
       setMessages((prevMessages) => [...prevMessages, msg]);
       setMessage('');
@@ -240,54 +242,18 @@ const ChatRoom = () => {
   };
   const renderMessage = ({ item }: { item: Message }) => {
     const isSentByMe = item.from === userId;
-
-    return (
-      <View style={[styles.messageContainer, isSentByMe ? styles.myMessage : styles.otherMessage]}>
-        <View style={styles.messageHeader}>
-          <Text style={styles.fromText}>{isSentByMe ? "You:" : `~${item.from}`}</Text>
-          <TouchableOpacity
-        onPressIn={toggleDropdown}
-        onPressOut={toggleDropdown}
-        style={styles.iconContainer}
-      >
-        <Icon name="keyboard-arrow-down" size={20} color="#fff" />
-      </TouchableOpacity>
-        </View>
-
-        {item.isFile ? (
-          <FilePreview from={item.from} message={item.message} fileUri={item.message} />
-        ) : (
-          <Text style={styles.messageText}>{item.message}</Text>
-        )}
-        <View style={styles.statusContainer}>
-          <Icon
-            name={
-              item.msgStatus === MessageStatus.READ
-                ? "done-all"
-                : item.msgStatus === MessageStatus.DELIVERED
-                  ? "done"
-                  : "schedule"
-            }
-            size={14}
-            color="#FFF"
-          />
-        </View>
-      </View>
-    );
   };
 
 
   return (
-    <View style={{ flex: 1, padding: 10 }}>
+    <GestureHandlerRootView style={{ flex: 1, padding: 10 }}>
       <Text>Chatting with {userId}</Text>
 
-      <FlatList
-        data={messages}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={renderMessage}
-        contentContainerStyle={{ paddingBottom: 20 }} // Adds padding at the bottom to avoid overlap with input
-
-      />
+      <FlashList
+      data={messages}
+      renderItem={({ item }) => <MessagePreview message={item} userId={userId} /> }
+      estimatedItemSize={200}
+    />
 
       <View>
         {userIdTyping !== '' && (
@@ -309,7 +275,7 @@ const ChatRoom = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 
 };

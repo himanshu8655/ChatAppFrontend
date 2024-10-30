@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { signup } from '../api/auth';
+import { signup, generateKeys } from '../api/auth';
 import { router } from 'expo-router';
 
 const Signup = () => {
@@ -12,6 +12,7 @@ const Signup = () => {
   const handleSignup = async () => {
     try {
       await signup(username, password, name);
+      router.dismissAll();
       router.navigate("./user_list");
     } catch (err) {
       setError('Error creating account');

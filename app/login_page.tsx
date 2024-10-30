@@ -11,6 +11,7 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       await login(username, password);
+      router.dismissAll();
       router.navigate("./user_list")
     } catch (err) {
       setError('Invalid credentials');
