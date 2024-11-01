@@ -369,8 +369,8 @@ const ChatRoom = () => {
             style={styles.input}
           />
           <Icon name="attach-file" size={24} onPress={handleFileUpload} style={styles.attachIcon} />
-          <DisconnectOutlined onClick={testDataDisconnect} size={40} color='red' style={styles.diConnectIcon} />
-          <CheckSquareOutlined onClick={testDataConnect} size={24} color='green' style={styles.connectIcon} />
+          {/* <DisconnectOutlined onClick={testDataDisconnect} size={40} color='red' style={styles.diConnectIcon} />
+          <CheckSquareOutlined onClick={testDataConnect} size={24} color='green' style={styles.connectIcon} /> */}
           <TouchableOpacity onPress={room_id == "AI" ? handleAIResponse : handleSendMessage} style={styles.sendButton}>
             <Icon name="send" size={24} color="white" />
           </TouchableOpacity>
