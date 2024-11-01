@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { fetchGroups, fetchUsers } from '@/api/userService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getUserID, logout } from '@/api/auth';
 import { useIsFocused } from '@react-navigation/native';
 
@@ -35,13 +34,9 @@ const UserList = () => {
       }
     };
 
-    fetchUsersData();
-  }, []);
-
-  useEffect(() => {
     const fetchGroupsData = async () => {
       try {
-        setLoading(true); // Start loading
+        setLoading(true);
         console.log("Fetching groups...");
         const groupsData = await fetchGroups();
         setGroups(groupsData);
@@ -54,6 +49,7 @@ const UserList = () => {
 
     if (isFocused) {
       fetchGroupsData();
+      fetchUsersData();
     }
   }, [isFocused]);
 

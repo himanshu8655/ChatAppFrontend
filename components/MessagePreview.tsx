@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import FilePreview from '@/components/file_preview';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 
 enum MessageStatus {
   SENT = 'sent',
@@ -21,15 +22,17 @@ interface Message {
 interface MessagePreviewProps {
   message: Message;
   userId: string;
+  onMessageDelete: (messageId: string) => void;
 }
 
-const MessagePreview: React.FC<MessagePreviewProps> = ({ message, userId }) => {
+const MessagePreview: React.FC<MessagePreviewProps> = ({ message, userId, onMessageDelete }) => {
   const isSentByMe = message.from === userId;
 
   return (
     <View style={[styles.messageContainer, isSentByMe ? styles.myMessage : styles.otherMessage]}>
       <View style={styles.messageHeader}>
         <Text style={styles.fromText}>{isSentByMe ? "You:" : `~${message.from}`}</Text>
+        <DeleteOutlined style={{color:'white'}} onClick={() => onMessageDelete(message.id!)}/>
       </View>
 
       {message.isFile ? (
@@ -38,7 +41,7 @@ const MessagePreview: React.FC<MessagePreviewProps> = ({ message, userId }) => {
         <Text style={styles.messageText}>{message.message}</Text>
       )}
       
-      <View style={styles.statusContainer}>
+      {isSentByMe?<View style={styles.statusContainer}>
         <Icon
           name={
             message.msgStatus === MessageStatus.READ
@@ -50,7 +53,7 @@ const MessagePreview: React.FC<MessagePreviewProps> = ({ message, userId }) => {
           size={14}
           color="#FFF"
         />
-      </View>
+      </View>:<></>}
     </View>
   );
 };
@@ -62,6 +65,7 @@ const styles = {
     borderRadius: 10,
     padding: 10,
     minWidth: 100,
+    marginRight: 18,
   },
   myMessage: {
     backgroundColor: '#0096c7',
